@@ -62,6 +62,7 @@ logger = logging.getLogger(__name__)
 
 async def inspect_block(
     inspect_db_session: orm.Session,
+    base_provider,
     w3: Web3,
     type: RPCType,
     trace_classifier: TraceClassifier,
@@ -71,7 +72,9 @@ async def inspect_block(
 ):
     await inspect_many_blocks(
         inspect_db_session,
+        base_provider,
         w3,
+        type,
         trace_classifier,
         block_number,
         block_number + 1,
@@ -82,7 +85,9 @@ async def inspect_block(
 
 async def inspect_many_blocks(
     inspect_db_session: orm.Session,
+    base_provider,
     w3: Web3,
+    type: RPCType,
     trace_classifier: TraceClassifier,
     after_block_number: int,
     before_block_number: int,
@@ -107,7 +112,9 @@ async def inspect_many_blocks(
 
     for block_number in range(after_block_number, before_block_number):
         block = await create_from_block_number(
+            base_provider,
             w3,
+            type,
             block_number,
             trace_db_session,
         )

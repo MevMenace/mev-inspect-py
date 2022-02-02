@@ -7,6 +7,8 @@ from .utils import CamelModel
 class TraceType(Enum):
     call = "call"
     create = "create"
+    create2 = "create2"
+    output = "output"
     delegate_call = "delegateCall"
     reward = "reward"
     suicide = "suicide"

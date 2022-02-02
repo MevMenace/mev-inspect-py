@@ -62,6 +62,7 @@ class MEVInspector:
     ):
         return await inspect_block(
             inspect_db_session,
+            self.base_provider,
             self.w3,
             self.type,
             self.trace_classifier,
@@ -112,6 +113,7 @@ class MEVInspector:
         async with self.max_concurrency:
             return await inspect_many_blocks(
                 inspect_db_session,
+                self.base_provider,
                 self.w3,
                 self.type,
                 self.trace_classifier,

@@ -32,6 +32,7 @@ async def get_latest_block_number(base_provider) -> int:
 
 
 async def create_from_block_number(
+    base_provider,
     w3: Web3,
     type: RPCType,
     block_number: int,
