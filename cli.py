@@ -10,6 +10,8 @@ from mev_inspect.crud.prices import write_prices
 from mev_inspect.db import get_inspect_session, get_trace_session
 from mev_inspect.inspector import MEVInspector
 from mev_inspect.prices import fetch_prices, fetch_prices_range
+from mev_inspect.utils import RPCType
+from mev_inspect.prices import fetch_all_supported_prices
 
 RPC_URL_ENV = "RPC_URL"
 
@@ -25,18 +27,35 @@ def cli():
 @cli.command()
 @click.argument("block_number", type=int)
 @click.option("--rpc", default=lambda: os.environ.get(RPC_URL_ENV, ""))
+@click.option(
+    "--type",
+    type=click.Choice(list(map(lambda x: x.name, RPCType)), case_sensitive=False),
+    default=RPCType.parity.name,
+)
 @coro
-async def inspect_block_command(block_number: int, rpc: str):
+async def inspect_block_command(block_number: int, rpc: str, type: str):
+    type_e = convert_str_to_enum(type)
     inspect_db_session = get_inspect_session()
     trace_db_session = get_trace_session()
 
-    inspector = MEVInspector(rpc)
+    #inspector = MEVInspector(rpc)
+    inspector = MEVInspector(rpc, inspect_db_session, trace_db_session, type_e)
+
 
     await inspector.inspect_single_block(
         inspect_db_session=inspect_db_session,
         trace_db_session=trace_db_session,
         block=block_number,
     )
+    #await inspector.inspect_single_block(block=block_number)
+
+
+def convert_str_to_enum(type: str) -> RPCType:
+    if type == "parity":
+        return RPCType.parity
+    elif type == "geth":
+        return RPCType.geth
+    raise ValueError
 
 
 @cli.command()
@@ -46,12 +65,15 @@ async def inspect_block_command(block_number: int, rpc: str):
 async def fetch_block_command(block_number: int, rpc: str):
     trace_db_session = get_trace_session()
 
-    inspector = MEVInspector(rpc)
+    #inspector = MEVInspector(rpc)
+    inspector = MEVInspector(rpc, inspect_db_session, trace_db_session, RPCType.parity)
     block = await inspector.create_from_block(
         block_number=block_number,
         trace_db_session=trace_db_session,
     )
 
+    
+    #block = await inspector.create_from_block(block_number=block_number)
     print(block.json())
 
 
@@ -59,6 +81,11 @@ async def fetch_block_command(block_number: int, rpc: str):
 @click.argument("after_block", type=int)
 @click.argument("before_block", type=int)
 @click.option("--rpc", default=lambda: os.environ.get(RPC_URL_ENV, ""))
+@click.option(
+    "--type",
+    type=click.Choice(list(map(lambda x: x.name, RPCType)), case_sensitive=False),
+    default=RPCType.parity.name,
+)
 @click.option(
     "--max-concurrency",
     type=int,
@@ -75,12 +102,16 @@ async def inspect_many_blocks_command(
     rpc: str,
     max_concurrency: int,
     request_timeout: int,
+    type: str,
 ):
+    type_e = convert_str_to_enum(type)
     inspect_db_session = get_inspect_session()
     trace_db_session = get_trace_session()
-
     inspector = MEVInspector(
         rpc,
+        inspect_db_session,
+        trace_db_session,
+        type_e,
         max_concurrency=max_concurrency,
         request_timeout=request_timeout,
     )

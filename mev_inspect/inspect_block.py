@@ -53,6 +53,9 @@ from mev_inspect.schemas.traces import ClassifiedTrace
 from mev_inspect.schemas.transfers import Transfer
 from mev_inspect.swaps import get_swaps
 from mev_inspect.transfers import get_transfers
+from mev_inspect.liquidations import get_liquidations
+from mev_inspect.utils import RPCType
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +63,7 @@ logger = logging.getLogger(__name__)
 async def inspect_block(
     inspect_db_session: orm.Session,
     w3: Web3,
+    type: RPCType,
     trace_classifier: TraceClassifier,
     block_number: int,
     trace_db_session: Optional[orm.Session],
