@@ -21,7 +21,6 @@ def get_arbitrages(swaps: List[Swap]) -> List[Arbitrage]:
         all_arbitrages += _get_arbitrages_from_swaps(
             list(transaction_swaps),
         )
-
     return all_arbitrages
 
 
@@ -65,7 +64,7 @@ def _get_arbitrages_from_swaps(swaps: List[Swap]) -> List[Arbitrage]:
             for swap in route:
                 if swap.error is not None:
                     error = swap.error
-
+            
             arb = Arbitrage(
                 swaps=route,
                 block_number=route[0].block_number,

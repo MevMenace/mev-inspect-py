@@ -1,6 +1,8 @@
 import asyncio
 import logging
+import traceback
 from typing import List, Optional
+import datetime as dt
 
 from sqlalchemy import orm
 from web3 import Web3
@@ -81,6 +83,7 @@ async def _fetch_block_parity(
         logger.warning(
             f"Failed to create objects from block: {block_number}: {e}, retrying: {retries + 1} / 3"
         )
+        logger.warning(traceback.format_exc())
         if retries < 3:
             await asyncio.sleep(5)
             return await _fetch_block_parity(w3, base_provider, block_number, retries)
@@ -114,9 +117,11 @@ async def _fetch_block_geth(
         logger.warning(
             f"Failed to create objects from block: {block_number}: {e}, retrying: {retries + 1} / 3"
         )
+        logger.warning(traceback.format_exc())
+
         if retries < 3:
             await asyncio.sleep(5)
-            return await _fetch_block_geth(w3, base_provider, block_number, retries)
+            return await _fetch_block_geth(w3, base_provider, block_number, retries+1)
         else:
             raise
 
@@ -285,6 +290,7 @@ async def geth_get_tx_traces_parity_format(base_provider, block_json: dict):
     block_trace = await geth_get_tx_traces(base_provider, block_hash)
     # print(block_trace)
     parity_traces = []
+    #logger.info(block_trace.items())
     for idx, trace in enumerate(block_trace["result"]):
         if "result" in trace:
             parity_traces.extend(
@@ -294,6 +300,7 @@ async def geth_get_tx_traces_parity_format(base_provider, block_json: dict):
 
 
 async def geth_get_tx_traces(base_provider, block_hash):
+    logger.info(str(block_hash.hex()))
     block_trace = await base_provider.make_request(
         "debug_traceBlockByHash", [block_hash.hex(), {"tracer": "callTracer"}]
     )
@@ -312,11 +319,20 @@ def unwrap_tx_trace_for_parity(
         if action_dict["callType"] == "call":
             action_dict["value"] = tx_trace["value"]
         for key in ["from", "to", "gas", "input"]:
-            action_dict[key] = tx_trace[key]
+            if key in tx_trace.keys():
+                action_dict[key] = tx_trace[key]
+            else:
+                print('No ', key)
+                #print(tx_trace)
 
         result_dict = dict()
-        for key in ["gasUsed", "output"]:
-            result_dict[key] = tx_trace[key]
+        result_dict["gasUsed"] = tx_trace["gasUsed"]
+        
+        if "output" in tx_trace.keys(): 
+            result_dict["output"] = tx_trace["output"]
+        else:
+            print('No output')
+            #print(tx_trace)
 
         response_list.append(
             Trace(
@@ -332,6 +348,7 @@ def unwrap_tx_trace_for_parity(
             )
         )
     except Exception as e:
+        traceback.print_exc()
         logger.warn(f"error while unwraping tx trace for parity {e}")
         return []
 
@@ -346,7 +363,9 @@ def unwrap_tx_trace_for_parity(
 
 
 async def geth_get_tx_receipts_task(base_provider, tx):
-    receipt = await base_provider.make_request("eth_getTransactionReceipt", [tx.hex()])
+    #logger.info('Tx: ' + str(tx.hex()))
+    #logger.info(dt.datetime.now())
+    receipt = await base_provider.make_request("eth_getTransactionReceipt", [str(tx.hex())])
     return receipt
 
 

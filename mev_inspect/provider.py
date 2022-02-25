@@ -6,7 +6,7 @@ from mev_inspect.utils import RPCType
 
 
 def get_base_provider(
-    rpc: str, request_timeout: int = 500, type: RPCType = RPCType.parity
+    rpc: str, request_timeout: int = 1000, type: RPCType = RPCType.parity
 ) -> Web3.AsyncHTTPProvider:
     base_provider = AsyncHTTPProvider(rpc, request_kwargs={"timeout": request_timeout})
     if type is RPCType.geth:

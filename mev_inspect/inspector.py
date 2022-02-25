@@ -32,7 +32,7 @@ class MEVInspector:
         trace_db_session: Optional[orm.Session],
         type: RPCType = RPCType.parity,
         max_concurrency: int = 1,
-        request_timeout: int = 300,
+        request_timeout: int = 10,
     ):
         self.inspect_db_session = inspect_db_session
         self.trace_db_session = trace_db_session

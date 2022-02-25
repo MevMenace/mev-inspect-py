@@ -23,3 +23,13 @@ def update_latest_block(db_session, block_number) -> None:
             """,
         params={"block_number": block_number},
     )
+
+def close_active_connections(db_session) -> None:
+    db_session.execute(
+        """
+            SELECT pg_terminate_backend(pg_stat_activity.pid)
+            FROM pg_stat_activity
+            where state = 'active'
+            AND pid <> pg_backend_pid();
+            """
+    )

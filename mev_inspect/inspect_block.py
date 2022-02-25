@@ -144,6 +144,10 @@ async def inspect_many_blocks(
         logger.info(f"Block: {block_number} -- Found {len(swaps)} swaps")
 
         arbitrages = get_arbitrages(swaps)
+        for s in arbitrages:
+            for sw in s.swaps:
+                logger.info(sw)
+                logger.info(str(sw.token_in_address) + '  ' + str(sw.token_out_address))
         logger.info(f"Block: {block_number} -- Found {len(arbitrages)} arbitrages")
 
         liquidations = get_liquidations(classified_traces)
